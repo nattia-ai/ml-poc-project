@@ -1,30 +1,59 @@
 """Student-owned dataset loading contract.
 
-Students must implement ``load_dataset_split`` so that ``scripts/main.py`` can
-evaluate every configured model on the same test split.
+Session 3 — Train/test split + transformations
+Projet : Prédiction de l'endométriose
+Auteur : Noa Attia
 """
 
 from __future__ import annotations
 
-from typing import Any
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+from src.features import add_features, scale_features, get_feature_columns, TARGET
+
+DATA_PATH = "data/structured_endometriosis_data.csv"
+TEST_SIZE  = 0.2
+RANDOM_STATE = 42
 
 
-def load_dataset_split() -> tuple[Any, Any, Any, Any]:
-    """Return the dataset split used for model evaluation.
+def load_dataset_split() -> tuple:
+    """Charge, transforme et divise le dataset.
 
-    Expected return value:
-        A tuple ``(X_train, X_test, y_train, y_test)``.
+    Pipeline complet :
+    1. Chargement du CSV
+    2. Feature engineering (nouvelles features)
+    3. Train/test split (80/20, stratifié sur la target)
+    4. StandardScaling des features numériques (fitté sur train seulement)
 
-    Constraints:
-    - ``X_train`` and ``X_test`` must contain feature data in a format accepted
-      by the trained models stored in ``config.MODELS``.
-    - ``y_train`` and ``y_test`` must contain the corresponding targets.
-    - ``y_test`` must align with the predictions produced by each loaded model.
-
-    Typical choices for the return types are ``pandas.DataFrame`` /
-    ``pandas.Series`` or ``numpy.ndarray``.
+    Returns:
+        (X_train, X_test, y_train, y_test)
     """
 
-    raise NotImplementedError(
-        "Implement data.load_dataset_split() before running scripts/main.py."
+    # ── 1. Chargement ─────────────────────────────────────────
+    df = pd.read_csv(DATA_PATH)
+
+    # ── 2. Feature engineering ────────────────────────────────
+    df = add_features(df)
+
+    # ── 3. Séparation features / target ───────────────────────
+    feature_cols = get_feature_columns(df)
+    X = df[feature_cols]
+    y = df[TARGET]
+
+    # ── 4. Train / test split (stratifié pour respecter l'imbalance) ──
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=y          # preserve le ratio 75/25 dans les deux splits
     )
+
+    # ── 5. Scaling (fit sur train, transform sur les deux) ────
+    X_train, X_test = scale_features(X_train, X_test)
+
+    print(f"✅ Dataset chargé : {len(df)} lignes | {len(feature_cols)} features")
+    print(f"   Train : {X_train.shape} | Test : {X_test.shape}")
+    print(f"   Distribution target (train) :\n{y_train.value_counts(normalize=True).round(3)}")
+
+    return X_train, X_test, y_train, y_test
