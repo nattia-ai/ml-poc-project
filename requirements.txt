@@ -13,6 +13,7 @@ pmdarima
 scikit-learn
 scipy
 seaborn
+skrub
 statsmodels
 streamlit
 xgboost

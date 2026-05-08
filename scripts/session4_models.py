@@ -9,6 +9,8 @@ Modèles entraînés :
   3. Gradient Boosting       (ensemble boosting)
 
 Chaque modèle est sauvegardé en .pkl dans le dossier models/.
+Le scaler StandardScaler est aussi sauvegardé (models/scaler.pkl)
+pour être réutilisé dans la démo Streamlit.
 """
 
 import os
@@ -21,8 +23,11 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import classification_report
+from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import StandardScaler
 
 from src.data import load_dataset_split
+from src.features import NUMERIC_FEATURES
 from src.metrics import compute_metrics
 
 # ─── Setup ───────────────────────────────────────────────────
@@ -39,6 +44,18 @@ X_train, X_test, y_train, y_test = load_dataset_split()
 
 print(f"\n  Train : {X_train.shape} | Test : {X_test.shape}")
 print(f"  Features : {list(X_train.columns)}")
+
+# ─── Sauvegarde du scaler (fitté dans load_dataset_split) ────
+# On re-fitte un scaler sur X_train pour pouvoir le sauvegarder
+# et l'utiliser dans la démo Streamlit avec de vraies entrées utilisateur
+scaler = StandardScaler()
+num_cols = [c for c in NUMERIC_FEATURES if c in X_train.columns]
+scaler.fit(X_train[num_cols])
+
+with open("models/scaler.pkl", "wb") as f:
+    pickle.dump({"scaler": scaler, "numeric_cols": num_cols}, f)
+print(f"\n  ✅ Scaler sauvegardé : models/scaler.pkl")
+print(f"     Colonnes scalées : {num_cols}")
 
 # ─── Définition des modèles ──────────────────────────────────
 models = {
@@ -82,7 +99,11 @@ for model_key, model_info in models.items():
 
     clf = model_info["model"]
 
-    # Entraînement
+    # Cross-validation (5 folds) sur le train set
+    cv_scores = cross_val_score(clf, X_train, y_train, cv=5, scoring="f1", n_jobs=-1)
+    print(f"  CV F1 (5 folds) : {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
+
+    # Entraînement sur tout le train set
     clf.fit(X_train, y_train)
 
     # Prédictions
@@ -90,7 +111,12 @@ for model_key, model_info in models.items():
 
     # Métriques
     metrics = compute_metrics(y_test, y_pred)
-    results.append({"model": model_info["name"], **metrics})
+    results.append({
+        "model": model_info["name"],
+        "cv_f1_mean": round(cv_scores.mean(), 4),
+        "cv_f1_std": round(cv_scores.std(), 4),
+        **metrics
+    })
 
     print(f"  Accuracy  : {metrics['accuracy']:.4f}")
     print(f"  Precision : {metrics['precision']:.4f}")

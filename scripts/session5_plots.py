@@ -3,10 +3,11 @@ Session 5 — Génération des plots GitHub
 Projet : Prédiction de l'endométriose
 Auteur : Noa Attia
 
-Génère 3 plots dans le dossier plots/ :
+Génère 4 plots dans le dossier plots/ :
   01_eda_correlation.png         — heatmap de corrélation (EDA)
   02_model_comparison.png        — comparaison des 3 modèles (F1, accuracy, recall)
   03_best_model_results.png      — confusion matrix + ROC du meilleur modèle
+  04_feature_importance.png      — importance des features (Gradient Boosting)
 """
 
 import os
@@ -140,5 +141,35 @@ plt.tight_layout()
 plt.savefig("plots/03_best_model_results.png", dpi=150, bbox_inches="tight")
 plt.close()
 print("  ✅ plots/03_best_model_results.png")
+
+# ─── 4. Feature Importance (Gradient Boosting) ───────────────
+importances = best_model.feature_importances_
+feature_names = X_train.columns.tolist()
+fi_df = pd.DataFrame({"feature": feature_names, "importance": importances})
+fi_df = fi_df.sort_values("importance", ascending=True)
+
+fig, ax = plt.subplots(figsize=(9, 6))
+colors = ["#fc8d62" if imp > fi_df["importance"].quantile(0.7) else "#66c2a5"
+          for imp in fi_df["importance"]]
+bars = ax.barh(fi_df["feature"], fi_df["importance"], color=colors, edgecolor="white")
+
+for bar, val in zip(bars, fi_df["importance"]):
+    ax.text(val + 0.002, bar.get_y() + bar.get_height()/2,
+            f"{val:.3f}", va="center", fontsize=10)
+
+ax.set_xlabel("Importance (gain)", fontsize=12)
+ax.set_title("Importance des features — Gradient Boosting",
+             fontsize=14, fontweight="bold")
+ax.set_xlim(0, fi_df["importance"].max() * 1.15)
+
+from matplotlib.patches import Patch
+legend_elements = [Patch(facecolor="#fc8d62", label="Top 30% features"),
+                   Patch(facecolor="#66c2a5", label="Autres features")]
+ax.legend(handles=legend_elements, fontsize=10, loc="lower right")
+
+plt.tight_layout()
+plt.savefig("plots/04_feature_importance.png", dpi=150, bbox_inches="tight")
+plt.close()
+print("  ✅ plots/04_feature_importance.png")
 
 print("\n🎉 Tous les plots générés dans plots/")

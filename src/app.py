@@ -40,6 +40,16 @@ def load_model(name: str):
         return pickle.load(f)
 
 
+@st.cache_resource
+def load_scaler():
+    path = MODELS_DIR / "scaler.pkl"
+    if not path.exists():
+        return None, None
+    with open(path, "rb") as f:
+        obj = pickle.load(f)
+    return obj["scaler"], obj["numeric_cols"]
+
+
 @st.cache_data
 def load_metrics() -> pd.DataFrame | None:
     if MODEL_METRICS_FILE.exists():
@@ -181,6 +191,16 @@ def build_app() -> None:
         if best_plot.exists():
             st.image(str(best_plot), use_column_width=True)
 
+        st.markdown("---")
+        st.subheader("🔍 Importance des features")
+        fi_plot = PROJECT_ROOT / "plots" / "04_feature_importance.png"
+        if fi_plot.exists():
+            st.image(str(fi_plot), use_column_width=True)
+        st.info(
+            "Les features **Menstrual_Irregularity** et **Chronic_Pain_Level** "
+            "dominent largement la prédiction, ce qui est cohérent avec la clinique."
+        )
+
     # ── Section 3 : Démo interactive ─────────────────────────
     elif section == "🤖 Démo interactive":
         st.title("🤖 Démo — Prédiction en temps réel")
@@ -244,22 +264,14 @@ def build_app() -> None:
         if st.button("🔍 Prédire", type="primary", use_container_width=True):
             try:
                 model = load_model("gradient_boosting")
+                scaler, numeric_cols = load_scaler()
 
-                # Scale les features numériques (approximation avec stats dataset)
-                # Les valeurs du scaler sont calculées sur le train set
-                # Age mean~34, std~9.2 | Pain mean~5.0, std~2.9 | BMI mean~27.5, std~5.8
-                from sklearn.preprocessing import StandardScaler
-                import numpy as np
-
+                # Scaling avec le vrai scaler fitté sur le train set
                 features_scaled = features.copy()
-                # On utilise les stats du train (approximation raisonnable)
-                stats = {
-                    "Age": (34.0, 9.2),
-                    "Chronic_Pain_Level": (5.0, 2.9),
-                    "BMI": (27.5, 5.8),
-                }
-                for col, (mean, std) in stats.items():
-                    features_scaled[col] = (features_scaled[col] - mean) / std
+                if scaler is not None and numeric_cols:
+                    features_scaled[numeric_cols] = scaler.transform(
+                        features_scaled[numeric_cols]
+                    )
 
                 pred = model.predict(features_scaled)[0]
                 proba = model.predict_proba(features_scaled)[0]
