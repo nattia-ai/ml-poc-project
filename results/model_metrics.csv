@@ -1,0 +1,4 @@
+model_key,model_name,model_path,accuracy,precision,recall,f1,roc_auc
+logistic_regression,Logistic Regression (baseline),/sessions/gracious-charming-carson/mnt/Desktop/ml-poc-project/models/logistic_regression.pkl,0.899,0.9657631954350927,0.8978779840848806,0.9305841924398626,0.9001585042375623
+random_forest,Random Forest,/sessions/gracious-charming-carson/mnt/Desktop/ml-poc-project/models/random_forest.pkl,0.9045,0.9595254710397767,0.9118037135278515,0.9350561033662019,0.8969587673330314
+gradient_boosting,Gradient Boosting,/sessions/gracious-charming-carson/mnt/Desktop/ml-poc-project/models/gradient_boosting.pkl,0.922,0.9395318595578673,0.9582228116710876,0.9487852921864741,0.8845992107135926
