@@ -149,7 +149,7 @@ def build_app() -> None:
         st.subheader("📈 Graphique de comparaison")
         comparison_plot = PROJECT_ROOT / "plots" / "02_model_comparison.png"
         if comparison_plot.exists():
-            st.image(str(comparison_plot), use_container_width=True)
+            st.image(str(comparison_plot), use_column_width=True)
 
         st.markdown("---")
         st.subheader("📋 Tableau des métriques")
@@ -179,7 +179,7 @@ def build_app() -> None:
         st.subheader("🎯 Résultats du meilleur modèle (Gradient Boosting)")
         best_plot = PROJECT_ROOT / "plots" / "03_best_model_results.png"
         if best_plot.exists():
-            st.image(str(best_plot), use_container_width=True)
+            st.image(str(best_plot), use_column_width=True)
 
     # ── Section 3 : Démo interactive ─────────────────────────
     elif section == "🤖 Démo interactive":
