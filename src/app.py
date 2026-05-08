@@ -59,7 +59,7 @@ def build_app() -> None:
     with st.sidebar:
         st.image(
             "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Endometriosis_Anatomy.png/220px-Endometriosis_Anatomy.png",
-            use_container_width=True,
+            use_column_width=True,
         )
         st.markdown("## Navigation")
         section = st.radio(
@@ -105,14 +105,14 @@ def build_app() -> None:
         with tab1:
             plot_path = PROJECT_ROOT / "deliverables" / "plots" / "02_features_by_target.png"
             if plot_path.exists():
-                st.image(str(plot_path), use_container_width=True)
+                st.image(str(plot_path), use_column_width=True)
             else:
                 st.info("Lancer `python scripts/session3_eda.py` pour générer les plots.")
 
         with tab2:
             plot_path = PROJECT_ROOT / "deliverables" / "plots" / "04_class_imbalance.png"
             if plot_path.exists():
-                st.image(str(plot_path), use_container_width=True)
+                st.image(str(plot_path), use_column_width=True)
             st.warning(
                 "⚠️ **Déséquilibre important** : 75 % positifs / 25 % négatifs (ratio 3.1x).  \n"
                 "→ Tous les modèles utilisent `class_weight='balanced'`."
@@ -121,7 +121,7 @@ def build_app() -> None:
         with tab3:
             plot_path = PROJECT_ROOT / "plots" / "01_eda_correlation.png"
             if plot_path.exists():
-                st.image(str(plot_path), use_container_width=True)
+                st.image(str(plot_path), use_column_width=True)
             st.info(
                 "**Features les plus corrélées à la target :**  \n"
                 "- `Menstrual_Irregularity` : 0.70  \n"

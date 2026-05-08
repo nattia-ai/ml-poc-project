@@ -22,6 +22,11 @@ def _load_module(module_name: str, module_path: Path) -> Any:
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
+# Ajoute la racine du projet au PYTHONPATH pour que les imports `from src.x` fonctionnent
+_PROJECT_ROOT = SCRIPT_DIR.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 config = _load_module("project_config", SCRIPT_DIR.parent / "src" / "config.py")
 sys.modules["config"] = config
 load_dotenv(config.ENV_FILE)
